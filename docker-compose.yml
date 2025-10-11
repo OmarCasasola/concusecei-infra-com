@@ -1,0 +1,64 @@
+version: "3.9"
+
+# Root docker-compose to run the frontend behind an HTTPS reverse proxy (Nginx)
+# Usage:
+#   1) cp .env.example .env
+#   2) Edit .env values (DOMAIN, API_BASE_URL, ...)
+#   3) Obtain Let's Encrypt certs on the host (see README)
+#   4) docker compose up -d --build
+# Then open https://$DOMAIN
+
+services:
+  # Frontend SPA served by internal Nginx on port 80 (no public ports)
+  frontend:
+    container_name: consule-frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: ${DOCKER_IMAGE:-consule-frontend}:local
+    expose:
+      - "80"
+    environment:
+      # These are read by the frontend entrypoint to generate /usr/share/nginx/html/env.js
+      API_BASE_URL: ${API_BASE_URL}
+      ENV_NAME: ${ENV_NAME:-production}
+      APP_VERSION: ${APP_VERSION:-0.0.0}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # Public-facing reverse proxy that terminates TLS and forwards to the frontend
+  reverse-proxy:
+    container_name: consule-proxy
+    image: nginx:1.27-alpine
+    depends_on:
+      - frontend  
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./reverse-proxy/nginx.conf:/etc/nginx/nginx.conf:ro
+      # ACME HTTP-01 challenge webroot (for certbot --webroot on host)
+      - ./certbot-webroot:/var/www/certbot:ro
+      # Mount host Let's Encrypt directory read-only (certs+keys)
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    restart: unless-stopped
+
+  # Example backend service (uncomment and adjust to your stack)
+  # backend:
+  #   build:
+  #     context: ./backend
+  #     dockerfile: Dockerfile
+  #   image: consule-backend:local
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     NODE_ENV: production
+  #   restart: unless-stopped
+
+networks:
+  default:
+    name: consule-net

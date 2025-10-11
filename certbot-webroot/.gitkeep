@@ -1,0 +1,2 @@
+# Placeholder to keep this directory in version control.
+# Certbot (running on the host) will drop ACME challenge files here when using --webroot.
