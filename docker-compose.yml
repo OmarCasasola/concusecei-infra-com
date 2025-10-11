@@ -13,7 +13,7 @@ services:
   frontend:
     container_name: consule-frontend
     build:
-      context: ./frontend
+      context: ./consulecei-frontend
       dockerfile: Dockerfile
     image: ${DOCKER_IMAGE:-consule-frontend}:local
     expose:

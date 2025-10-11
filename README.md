@@ -1,7 +1,7 @@
 # Consule - Despliegue con HTTPS (Nginx reverse proxy + frontend)
 
 Este repositorio está organizado como monorepo:
-- `frontend/`: Aplicación Angular, con su `Jenkinsfile` y `Dockerfile` listos.
+- `consulecei-frontend/`: Aplicación Angular, con su `Dockerfile` listo.
 - `backend/`: (Opcional) Servicio backend. No se incluye configuración de Docker en este momento.
 - `reverse-proxy/`: Nginx que termina TLS (HTTPS) para tu dominio y hace proxy al `frontend` por red interna.
 
